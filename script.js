@@ -19,68 +19,42 @@ function rotateQuote() {
 }
 setInterval(rotateQuote, 5000);
 
-// Variables for calendar and tasks
-const calendar = document.getElementById("calendar");
+const calendarDays = document.getElementById("calendarDays");
 const selectedDateDisplay = document.getElementById("selectedDate");
-const taskList = document.getElementById("taskList");
-const monthYearLabel = document.getElementById("monthYear");
+const monthYear = document.getElementById("monthYear");
 const prevMonthBtn = document.getElementById("prevMonth");
 const nextMonthBtn = document.getElementById("nextMonth");
+const taskList = document.getElementById("taskList");
 
-let tasksByDate = JSON.parse(localStorage.getItem("tasksByDate")) || {};
+let currentDate = new Date();
 let selectedDate = null;
+let tasksByDate = JSON.parse(localStorage.getItem("tasksByDate")) || {};
 
-// Track current displayed year and month
-let currentYear, currentMonth; // month: 0-11
+const monthNames = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
 
-function initializeCalendar() {
-  const today = new Date();
-  currentYear = today.getFullYear();
-  currentMonth = today.getMonth();
-  renderCalendar(currentYear, currentMonth);
-}
+function generateCalendar(date) {
+  calendarDays.innerHTML = "";
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
 
-function renderCalendar(year, month) {
-  calendar.innerHTML = "";
+  monthYear.textContent = `${monthNames[month]} ${year}`;
 
-  // Show Month Year label, e.g., May 2025
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  monthYearLabel.textContent = `${monthNames[month]} ${year}`;
-
-  // Add day labels for week (Sun - Sat)
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  for (let dayLabel of dayLabels) {
-    const dayDiv = document.createElement("div");
-    dayDiv.textContent = dayLabel;
-    dayDiv.style.fontWeight = "bold";
-    dayDiv.style.backgroundColor = "#d2b894";
-    calendar.appendChild(dayDiv);
+  for (let i = 0; i < firstDay; i++) {
+    const emptyDiv = document.createElement("div");
+    calendarDays.appendChild(emptyDiv);
   }
 
-  // Calculate starting day index of the month
-  const firstDayOfMonth = new Date(year, month, 1);
-  const startDay = firstDayOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
-
-  // Days in the month
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  // Fill blank days before first day of month
-  for (let i = 0; i < startDay; i++) {
-    const blankDiv = document.createElement("div");
-    blankDiv.style.backgroundColor = "transparent";
-    blankDiv.style.cursor = "default";
-    calendar.appendChild(blankDiv);
-  }
-
-  // Add days
-  for (let day = 1; day <= daysInMonth; day++) {
+  for (let day = 1; day <= lastDate; day++) {
     const cell = document.createElement("div");
     cell.textContent = day;
 
-    // Highlight today if in current month and year
+    const fullDate = `${year}-${month + 1}-${day}`;
+
     const today = new Date();
     if (
       day === today.getDate() &&
@@ -91,49 +65,30 @@ function renderCalendar(year, month) {
     }
 
     cell.addEventListener("click", () => {
-      selectedDate = `${year}-${month + 1}-${day}`;
+      selectedDate = fullDate;
       selectedDateDisplay.textContent = `Tasks for ${selectedDate}`;
       renderTasks();
     });
-    calendar.appendChild(cell);
+
+    calendarDays.appendChild(cell);
   }
 }
 
-// Change month handlers
 prevMonthBtn.addEventListener("click", () => {
-  currentMonth--;
-  if (currentMonth < 0) {
-    currentMonth = 11;
-    currentYear--;
-  }
-  renderCalendar(currentYear, currentMonth);
-  // Clear selection and tasks
-  selectedDate = null;
-  selectedDateDisplay.textContent = "Select a date to see tasks";
-  taskList.innerHTML = "";
+  currentDate.setMonth(currentDate.getMonth() - 1);
+  generateCalendar(currentDate);
 });
 
 nextMonthBtn.addEventListener("click", () => {
-  currentMonth++;
-  if (currentMonth > 11) {
-    currentMonth = 0;
-    currentYear++;
-  }
-  renderCalendar(currentYear, currentMonth);
-  // Clear selection and tasks
-  selectedDate = null;
-  selectedDateDisplay.textContent = "Select a date to see tasks";
-  taskList.innerHTML = "";
+  currentDate.setMonth(currentDate.getMonth() + 1);
+  generateCalendar(currentDate);
 });
 
 function addTask() {
   const taskInput = document.getElementById("taskInput");
   const task = taskInput.value.trim();
   if (task && selectedDate) {
-    const taskItem = {
-      text: task,
-      completed: false
-    };
+    const taskItem = { text: task, completed: false };
     if (!tasksByDate[selectedDate]) {
       tasksByDate[selectedDate] = [];
     }
@@ -141,8 +96,6 @@ function addTask() {
     saveTasks();
     renderTasks();
     taskInput.value = "";
-  } else if (!selectedDate) {
-    alert("Please select a date on the calendar first.");
   }
 }
 
@@ -153,6 +106,7 @@ function saveTasks() {
 function renderTasks() {
   taskList.innerHTML = "";
   if (!selectedDate || !tasksByDate[selectedDate]) return;
+
   tasksByDate[selectedDate].forEach((taskObj, index) => {
     const li = document.createElement("li");
     const leftDiv = document.createElement("div");
@@ -190,10 +144,9 @@ function renderTasks() {
 
     li.appendChild(leftDiv);
     li.appendChild(deleteBtn);
-
     taskList.appendChild(li);
   });
 }
 
-// Initialize calendar on page load
-initializeCalendar();
+// Initial calendar render
+generateCalendar(currentDate);
