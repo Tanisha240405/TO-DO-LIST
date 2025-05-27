@@ -19,58 +19,61 @@ function rotateQuote() {
 }
 setInterval(rotateQuote, 5000);
 
-const calendarDays = document.getElementById("calendarDays");
+const calendar = document.getElementById("calendar");
 const selectedDateDisplay = document.getElementById("selectedDate");
-const monthYear = document.getElementById("monthYear");
+const taskList = document.getElementById("taskList");
+const monthYearDisplay = document.getElementById("monthYear");
 const prevMonthBtn = document.getElementById("prevMonth");
 const nextMonthBtn = document.getElementById("nextMonth");
-const taskList = document.getElementById("taskList");
 
-let currentDate = new Date();
 let selectedDate = null;
 let tasksByDate = JSON.parse(localStorage.getItem("tasksByDate")) || {};
 
-const monthNames = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
+let currentDate = new Date();
 
 function generateCalendar(date) {
-  calendarDays.innerHTML = "";
+  calendar.innerHTML = "";
+
   const year = date.getFullYear();
   const month = date.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const lastDate = new Date(year, month + 1, 0).getDate();
 
-  monthYear.textContent = `${monthNames[month]} ${year}`;
+  const firstDay = new Date(year, month, 1);
+  const startingDay = firstDay.getDay(); // 0 (Sunday) to 6 (Saturday)
 
-  for (let i = 0; i < firstDay; i++) {
-    const emptyDiv = document.createElement("div");
-    calendarDays.appendChild(emptyDiv);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Update month and year display
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+
+  // Add empty cells for days before the first day of the month
+  for (let i = 0; i < startingDay; i++) {
+    const emptyCell = document.createElement("div");
+    emptyCell.classList.add("empty");
+    calendar.appendChild(emptyCell);
   }
 
-  for (let day = 1; day <= lastDate; day++) {
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+  for (let day = 1; day <= daysInMonth; day++) {
     const cell = document.createElement("div");
     cell.textContent = day;
 
-    const fullDate = `${year}-${month + 1}-${day}`;
-
-    const today = new Date();
-    if (
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear()
-    ) {
+    if (isCurrentMonth && day === today.getDate()) {
       cell.classList.add("today");
     }
 
     cell.addEventListener("click", () => {
-      selectedDate = fullDate;
+      selectedDate = `${year}-${month + 1}-${day}`;
       selectedDateDisplay.textContent = `Tasks for ${selectedDate}`;
       renderTasks();
     });
 
-    calendarDays.appendChild(cell);
+    calendar.appendChild(cell);
   }
 }
 
@@ -88,7 +91,10 @@ function addTask() {
   const taskInput = document.getElementById("taskInput");
   const task = taskInput.value.trim();
   if (task && selectedDate) {
-    const taskItem = { text: task, completed: false };
+    const taskItem = {
+      text: task,
+      completed: false
+    };
     if (!tasksByDate[selectedDate]) {
       tasksByDate[selectedDate] = [];
     }
@@ -106,47 +112,8 @@ function saveTasks() {
 function renderTasks() {
   taskList.innerHTML = "";
   if (!selectedDate || !tasksByDate[selectedDate]) return;
-
   tasksByDate[selectedDate].forEach((taskObj, index) => {
     const li = document.createElement("li");
-    const leftDiv = document.createElement("div");
-    leftDiv.classList.add("task-left");
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = taskObj.completed;
-    checkbox.addEventListener("change", () => {
-      taskObj.completed = checkbox.checked;
-      saveTasks();
-      renderTasks();
-    });
-
-    const span = document.createElement("span");
-    span.textContent = taskObj.text;
-    if (taskObj.completed) {
-      span.classList.add("completed");
-    }
-
-    leftDiv.appendChild(checkbox);
-    leftDiv.appendChild(span);
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.classList.add("delete-btn");
-    deleteBtn.innerHTML = "&times;";
-    deleteBtn.addEventListener("click", () => {
-      tasksByDate[selectedDate].splice(index, 1);
-      if (tasksByDate[selectedDate].length === 0) {
-        delete tasksByDate[selectedDate];
-      }
-      saveTasks();
-      renderTasks();
-    });
-
-    li.appendChild(leftDiv);
-    li.appendChild(deleteBtn);
-    taskList.appendChild(li);
-  });
-}
-
-// Initial calendar render
-generateCalendar(currentDate);
+    const
+::contentReference[oaicite:0]{index=0}
+ 
