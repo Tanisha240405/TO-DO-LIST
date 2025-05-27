@@ -19,51 +19,74 @@ function rotateQuote() {
 }
 setInterval(rotateQuote, 5000);
 
+// Variables for calendar and tasks
 const calendar = document.getElementById("calendar");
 const selectedDateDisplay = document.getElementById("selectedDate");
 const taskList = document.getElementById("taskList");
-const monthYearDisplay = document.getElementById("monthYear");
+const monthYearLabel = document.getElementById("monthYear");
 const prevMonthBtn = document.getElementById("prevMonth");
 const nextMonthBtn = document.getElementById("nextMonth");
 
-let selectedDate = null;
 let tasksByDate = JSON.parse(localStorage.getItem("tasksByDate")) || {};
+let selectedDate = null;
 
-let currentDate = new Date();
+// Track current displayed year and month
+let currentYear, currentMonth; // month: 0-11
 
-function generateCalendar(date) {
+function initializeCalendar() {
+  const today = new Date();
+  currentYear = today.getFullYear();
+  currentMonth = today.getMonth();
+  renderCalendar(currentYear, currentMonth);
+}
+
+function renderCalendar(year, month) {
   calendar.innerHTML = "";
 
-  const year = date.getFullYear();
-  const month = date.getMonth();
-
-  const firstDay = new Date(year, month, 1);
-  const startingDay = firstDay.getDay(); // 0 (Sunday) to 6 (Saturday)
-
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  // Update month and year display
+  // Show Month Year label, e.g., May 2025
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
-  monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+  monthYearLabel.textContent = `${monthNames[month]} ${year}`;
 
-  // Add empty cells for days before the first day of the month
-  for (let i = 0; i < startingDay; i++) {
-    const emptyCell = document.createElement("div");
-    emptyCell.classList.add("empty");
-    calendar.appendChild(emptyCell);
+  // Add day labels for week (Sun - Sat)
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  for (let dayLabel of dayLabels) {
+    const dayDiv = document.createElement("div");
+    dayDiv.textContent = dayLabel;
+    dayDiv.style.fontWeight = "bold";
+    dayDiv.style.backgroundColor = "#d2b894";
+    calendar.appendChild(dayDiv);
   }
 
-  const today = new Date();
-  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+  // Calculate starting day index of the month
+  const firstDayOfMonth = new Date(year, month, 1);
+  const startDay = firstDayOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
 
+  // Days in the month
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Fill blank days before first day of month
+  for (let i = 0; i < startDay; i++) {
+    const blankDiv = document.createElement("div");
+    blankDiv.style.backgroundColor = "transparent";
+    blankDiv.style.cursor = "default";
+    calendar.appendChild(blankDiv);
+  }
+
+  // Add days
   for (let day = 1; day <= daysInMonth; day++) {
     const cell = document.createElement("div");
     cell.textContent = day;
 
-    if (isCurrentMonth && day === today.getDate()) {
+    // Highlight today if in current month and year
+    const today = new Date();
+    if (
+      day === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear()
+    ) {
       cell.classList.add("today");
     }
 
@@ -72,19 +95,35 @@ function generateCalendar(date) {
       selectedDateDisplay.textContent = `Tasks for ${selectedDate}`;
       renderTasks();
     });
-
     calendar.appendChild(cell);
   }
 }
 
+// Change month handlers
 prevMonthBtn.addEventListener("click", () => {
-  currentDate.setMonth(currentDate.getMonth() - 1);
-  generateCalendar(currentDate);
+  currentMonth--;
+  if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
+  }
+  renderCalendar(currentYear, currentMonth);
+  // Clear selection and tasks
+  selectedDate = null;
+  selectedDateDisplay.textContent = "Select a date to see tasks";
+  taskList.innerHTML = "";
 });
 
 nextMonthBtn.addEventListener("click", () => {
-  currentDate.setMonth(currentDate.getMonth() + 1);
-  generateCalendar(currentDate);
+  currentMonth++;
+  if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
+  }
+  renderCalendar(currentYear, currentMonth);
+  // Clear selection and tasks
+  selectedDate = null;
+  selectedDateDisplay.textContent = "Select a date to see tasks";
+  taskList.innerHTML = "";
 });
 
 function addTask() {
@@ -102,6 +141,8 @@ function addTask() {
     saveTasks();
     renderTasks();
     taskInput.value = "";
+  } else if (!selectedDate) {
+    alert("Please select a date on the calendar first.");
   }
 }
 
@@ -114,6 +155,45 @@ function renderTasks() {
   if (!selectedDate || !tasksByDate[selectedDate]) return;
   tasksByDate[selectedDate].forEach((taskObj, index) => {
     const li = document.createElement("li");
-    const
-::contentReference[oaicite:0]{index=0}
- 
+    const leftDiv = document.createElement("div");
+    leftDiv.classList.add("task-left");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = taskObj.completed;
+    checkbox.addEventListener("change", () => {
+      taskObj.completed = checkbox.checked;
+      saveTasks();
+      renderTasks();
+    });
+
+    const span = document.createElement("span");
+    span.textContent = taskObj.text;
+    if (taskObj.completed) {
+      span.classList.add("completed");
+    }
+
+    leftDiv.appendChild(checkbox);
+    leftDiv.appendChild(span);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.classList.add("delete-btn");
+    deleteBtn.innerHTML = "&times;";
+    deleteBtn.addEventListener("click", () => {
+      tasksByDate[selectedDate].splice(index, 1);
+      if (tasksByDate[selectedDate].length === 0) {
+        delete tasksByDate[selectedDate];
+      }
+      saveTasks();
+      renderTasks();
+    });
+
+    li.appendChild(leftDiv);
+    li.appendChild(deleteBtn);
+
+    taskList.appendChild(li);
+  });
+}
+
+// Initialize calendar on page load
+initializeCalendar();
