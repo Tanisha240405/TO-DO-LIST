@@ -18,7 +18,12 @@
       </div>
       <div class="main-panel">
         <h1 class="heading">My Tasks</h1>
-        <div class="calendar" id="calendar"></div>
+        <div class="calendar-header">
+          <button id="prevMonth">&lt;</button>
+          <span id="monthYear"></span>
+          <button id="nextMonth">&gt;</button>
+        </div>
+        <div class="calendar" id="calendarDays"></div>
         <div class="todo-section">
           <h2 id="selectedDate">Select a date to see tasks</h2>
           <div class="input-area">
